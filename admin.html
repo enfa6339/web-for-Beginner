@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — OptiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { DEFAULT: '#12172B', deep: '#0B0F1F', light: '#1D2440' },
+          amber: { DEFAULT: '#E8A33D', soft: '#F2C579', dim: '#9C7233' },
+          teal: { DEFAULT: '#4C6B77', light: '#7C97A0' },
+          cream: '#F5F0E6',
+        },
+        fontFamily: { display: ['Kanit', 'sans-serif'], body: ['Sarabun', 'sans-serif'] },
+      },
+    },
+  }
+</script>
+<style>
+  * { font-family: 'Sarabun', sans-serif; }
+  .font-display { font-family: 'Kanit', sans-serif; }
+  body { background-color: #0B0F1F; }
+
+  .btn-primary {
+    background: #E8A33D; color: #12172B;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .btn-primary:hover { background: #F2C579; box-shadow: 0 8px 30px -6px rgba(232,163,61,0.5); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  table { border-collapse: separate; border-spacing: 0; }
+  thead th {
+    background: #171D34;
+    border-bottom: 1px solid #2C3457;
+  }
+  tbody tr { border-bottom: 1px solid rgba(124,151,160,0.12); }
+  tbody tr:hover { background: rgba(232,163,61,0.05); }
+
+  .spinner {
+    border: 3px solid rgba(124,151,160,0.25);
+    border-top-color: #E8A33D;
+    border-radius: 9999px;
+    width: 28px; height: 28px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation: none; }
+  }
+</style>
+</head>
+<body class="bg-navy-deep text-cream min-h-screen">
+
+  <!-- ============ NAV ============ -->
+  <header class="max-w-6xl mx-auto px-6 md:px-10 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <span class="font-display text-xl md:text-2xl font-semibold tracking-tight text-cream">OptiGuard</span>
+      <span class="text-cream/40 text-sm hidden sm:inline">/ Admin</span>
+    </div>
+    <a href="index.html" class="text-sm text-cream/60 hover:text-amber transition-colors">← หน้าสินค้า</a>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 md:px-10 pb-20">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="font-display text-2xl md:text-3xl font-semibold text-cream mb-1">รายการสั่งซื้อสินค้า (Admin Dashboard)</h1>
+        <p class="text-cream/50 text-sm" id="statusLine">กำลังโหลดข้อมูล...</p>
+      </div>
+      <button id="refreshBtn" class="btn-primary font-display font-medium text-sm px-6 py-2.5 rounded-full">
+        รีเฟรชข้อมูล
+      </button>
+    </div>
+
+    <!-- ============ TABLE CARD ============ -->
+    <div class="bg-navy-light/40 border border-teal-light/20 rounded-2xl overflow-hidden">
+
+      <!-- Loading state -->
+      <div id="loadingState" class="flex flex-col items-center justify-center py-20 gap-4">
+        <div class="spinner"></div>
+        <span class="text-cream/50 text-sm">กำลังดึงข้อมูลคำสั่งซื้อ...</span>
+      </div>
+
+      <!-- Error state -->
+      <div id="errorState" class="hidden flex-col items-center justify-center py-20 gap-3 text-center px-6">
+        <p class="text-cream/80 font-display text-lg">ดึงข้อมูลไม่สำเร็จ</p>
+        <p class="text-cream/50 text-sm max-w-sm">ตรวจสอบว่าใส่ scriptURL ถูกต้องแล้ว และ Google Apps Script เปิดสิทธิ์การเข้าถึงแบบ GET ไว้</p>
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="hidden flex-col items-center justify-center py-20 gap-2 text-center px-6">
+        <p class="text-cream/80 font-display text-lg">ยังไม่มีคำสั่งซื้อเข้ามา</p>
+        <p class="text-cream/50 text-sm">เมื่อมีลูกค้าสั่งซื้อ รายการจะแสดงที่นี่</p>
+      </div>
+
+      <!-- Table -->
+      <div id="tableWrap" class="hidden overflow-x-auto">
+        <table class="w-full text-sm text-left min-w-[640px]">
+          <thead>
+            <tr>
+              <th class="px-5 py-3.5 font-display font-medium text-cream/70 whitespace-nowrap">วันที่/เวลา</th>
+              <th class="px-5 py-3.5 font-display font-medium text-cream/70 whitespace-nowrap">ชื่อ-นามสกุล</th>
+              <th class="px-5 py-3.5 font-display font-medium text-cream/70 whitespace-nowrap">เบอร์โทรศัพท์</th>
+              <th class="px-5 py-3.5 font-display font-medium text-cream/70">ที่อยู่จัดส่ง</th>
+              <th class="px-5 py-3.5 font-display font-medium text-cream/70 whitespace-nowrap">ยอดเงิน</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzmn5IYD1b32uGNpm2uwaH5zWG585PnDFAwixiRwyGsI_jIH_XlTTCrJDIGJeLOm5DIKA/exec";
+
+    const statusLine = document.getElementById('statusLine');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const loadingState = document.getElementById('loadingState');
+    const errorState = document.getElementById('errorState');
+    const emptyState = document.getElementById('emptyState');
+    const tableWrap = document.getElementById('tableWrap');
+    const ordersBody = document.getElementById('ordersBody');
+
+    function setView(view) {
+      loadingState.classList.add('hidden');
+      errorState.classList.add('hidden');
+      errorState.classList.remove('flex');
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+      tableWrap.classList.add('hidden');
+
+      if (view === 'loading') loadingState.classList.remove('hidden');
+      if (view === 'error') { errorState.classList.remove('hidden'); errorState.classList.add('flex'); }
+      if (view === 'empty') { emptyState.classList.remove('hidden'); emptyState.classList.add('flex'); }
+      if (view === 'table') tableWrap.classList.remove('hidden');
+    }
+
+    function escapeHtml(value) {
+      const div = document.createElement('div');
+      div.textContent = value ?? '';
+      return div.innerHTML;
+    }
+
+    function renderRows(orders) {
+      ordersBody.innerHTML = orders.map((order) => `
+        <tr>
+          <td class="px-5 py-3.5 text-cream/70 whitespace-nowrap">${escapeHtml(order.timestamp || '-')}</td>
+          <td class="px-5 py-3.5 text-cream">${escapeHtml(order.fullname || '-')}</td>
+          <td class="px-5 py-3.5 text-cream/70 whitespace-nowrap">${escapeHtml(order.phone || '-')}</td>
+          <td class="px-5 py-3.5 text-cream/70">${escapeHtml(order.address || '-')}</td>
+          <td class="px-5 py-3.5 text-amber font-medium whitespace-nowrap">${escapeHtml(order.price || '490 บาท')}</td>
+        </tr>
+      `).join('');
+    }
+
+    function loadOrders() {
+      setView('loading');
+      statusLine.textContent = 'กำลังโหลดข้อมูล...';
+      refreshBtn.disabled = true;
+
+      fetch(scriptURL)
+        .then((response) => response.json())
+        .then((data) => {
+          const orders = Array.isArray(data) ? data : [];
+
+          if (orders.length === 0) {
+            setView('empty');
+            statusLine.textContent = 'ยังไม่มีคำสั่งซื้อ';
+            return;
+          }
+
+          renderRows(orders);
+          setView('table');
+          statusLine.textContent = `ทั้งหมด ${orders.length} รายการ`;
+        })
+        .catch((error) => {
+          console.error('เกิดข้อผิดพลาดในการดึงข้อมูล:', error);
+          setView('error');
+          statusLine.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+        })
+        .finally(() => {
+          refreshBtn.disabled = false;
+        });
+    }
+
+    refreshBtn.addEventListener('click', loadOrders);
+    loadOrders();
+  </script>
+
+</body>
+</html>

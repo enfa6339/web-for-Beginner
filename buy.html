@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สั่งซื้อ OptiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { DEFAULT: '#12172B', deep: '#0B0F1F', light: '#1D2440' },
+          amber: { DEFAULT: '#E8A33D', soft: '#F2C579', dim: '#9C7233' },
+          teal: { DEFAULT: '#4C6B77', light: '#7C97A0' },
+          cream: '#F5F0E6',
+        },
+        fontFamily: { display: ['Kanit', 'sans-serif'], body: ['Sarabun', 'sans-serif'] },
+      },
+    },
+  }
+</script>
+<style>
+  * { font-family: 'Sarabun', sans-serif; }
+  .font-display { font-family: 'Kanit', sans-serif; }
+  body { background-color: #0B0F1F; }
+
+  .glow-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .glow-orb { position: absolute; border-radius: 9999px; filter: blur(90px); opacity: 0.45; }
+
+  .price-strike { position: relative; display: inline-block; }
+  .price-strike::after {
+    content: ''; position: absolute; left: -4%; right: -4%; top: 52%;
+    height: 2px; background: #C0503A; transform: rotate(-4deg);
+  }
+
+  .field-input { background: #171D34; border: 1px solid #2C3457; transition: border-color 0.2s ease, background 0.2s ease; }
+  .field-input:focus { outline: none; border-color: #E8A33D; background: #1B2240; }
+
+  .btn-primary {
+    background: #E8A33D; color: #12172B;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .btn-primary:hover { background: #F2C579; box-shadow: 0 8px 30px -6px rgba(232,163,61,0.5); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  #toast { transition: opacity 0.3s ease, transform 0.3s ease; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body class="bg-navy-deep text-cream min-h-screen">
+
+  <!-- ============ NAV ============ -->
+  <header class="relative z-20 max-w-3xl mx-auto px-6 md:px-10 py-6 flex items-center justify-between">
+    <a href="index.html" class="text-sm md:text-base text-cream/70 hover:text-amber transition-colors flex items-center gap-2">
+      <span aria-hidden="true">←</span> กลับหน้าสินค้า
+    </a>
+    <span class="font-display text-lg md:text-xl font-semibold tracking-tight text-cream">OptiGuard</span>
+  </header>
+
+  <section class="relative overflow-hidden">
+    <div class="glow-field">
+      <div class="glow-orb w-[420px] h-[420px] bg-amber/60 -top-32 -right-24"></div>
+    </div>
+
+    <div class="relative z-10 max-w-3xl mx-auto px-6 md:px-10 pt-6 pb-20">
+
+      <!-- ============ ORDER SUMMARY ============ -->
+      <div class="bg-navy-light/40 border border-teal-light/20 rounded-2xl p-6 md:p-8 mb-8 flex items-center gap-5">
+        <img
+          src="https://images.unsplash.com/photo-1591076482161-42ce6da69f67?q=80&w=200&auto=format&fit=crop"
+          alt="แว่นตากรองแสง OptiGuard"
+          class="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover flex-shrink-0"
+        >
+        <div class="flex-1 min-w-0">
+          <h2 class="font-display text-lg md:text-xl font-medium text-cream mb-1">แว่นตากรองแสงสีฟ้า OptiGuard</h2>
+          <p class="text-cream/50 text-sm mb-2">กรองแสงฟ้า 99% • เบา 12 กรัม • ส่งฟรีทั่วไทย</p>
+          <div class="flex items-baseline gap-2">
+            <span class="price-strike text-cream/40 text-sm">990 บาท</span>
+            <span class="font-display text-2xl md:text-3xl font-semibold text-amber">490 บาท</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ ORDER FORM ============ -->
+      <div class="mb-6">
+        <h1 class="font-display text-2xl md:text-3xl font-semibold text-cream mb-2">กรอกข้อมูลสั่งซื้อ</h1>
+        <p class="text-cream/60 text-sm">เจ้าหน้าที่จะติดต่อกลับเพื่อยืนยันคำสั่งซื้อ</p>
+      </div>
+
+      <form id="orderForm" class="bg-navy-light/40 border border-teal-light/20 rounded-2xl p-6 md:p-10 space-y-5">
+        <div>
+          <label for="fullname" class="block text-sm text-cream/70 mb-2">ชื่อ-นามสกุล</label>
+          <input type="text" id="fullname" name="fullname" required
+            class="field-input w-full rounded-lg px-4 py-3 text-cream placeholder-cream/30"
+            placeholder="เช่น สมชาย ใจดี">
+        </div>
+
+        <div>
+          <label for="phone" class="block text-sm text-cream/70 mb-2">เบอร์โทรศัพท์</label>
+          <input type="tel" id="phone" name="phone" required pattern="[0-9]{9,10}"
+            class="field-input w-full rounded-lg px-4 py-3 text-cream placeholder-cream/30"
+            placeholder="เช่น 0812345678">
+        </div>
+
+        <div>
+          <label for="address" class="block text-sm text-cream/70 mb-2">ที่อยู่จัดส่ง</label>
+          <textarea id="address" name="address" required rows="3"
+            class="field-input w-full rounded-lg px-4 py-3 text-cream placeholder-cream/30 resize-none"
+            placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์"></textarea>
+        </div>
+
+        <input type="hidden" name="product" value="แว่นตากรองแสงสีฟ้า OptiGuard">
+        <input type="hidden" name="price" value="490">
+
+        <button type="submit" id="submitBtn"
+          class="btn-primary font-display font-medium text-lg w-full py-3.5 rounded-full">
+          ยืนยันการสั่งซื้อ
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ TOAST ============ -->
+  <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-8 z-50 opacity-0 pointer-events-none translate-y-3 px-4 w-full max-w-md">
+    <div class="bg-amber text-navy-deep font-display font-medium px-6 py-3.5 rounded-full shadow-2xl text-sm md:text-base text-center">
+      สั่งซื้อสำเร็จ! เจ้าหน้าที่จะติดต่อกลับโดยเร็ว
+    </div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzmn5IYD1b32uGNpm2uwaH5zWG585PnDFAwixiRwyGsI_jIH_XlTTCrJDIGJeLOm5DIKA/exec";
+
+    const orderForm = document.getElementById('orderForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const toast = document.getElementById('toast');
+    const ORIGINAL_BTN_TEXT = submitBtn.textContent;
+
+    function showToast() {
+      toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 4000);
+    }
+
+    orderForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      // แมปค่าจาก id ให้ตรงกับคีย์ name, phone, address
+      const payload = {
+        name: document.getElementById('fullname').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'กำลังบันทึกข้อมูล...';
+
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(() => {
+          showToast();
+          orderForm.reset();
+        })
+        .catch((error) => {
+          console.error('เกิดข้อผิดพลาดในการส่งข้อมูล:', error);
+          alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+        })
+        .finally(() => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = ORIGINAL_BTN_TEXT;
+        });
+    });
+  </script>
+
+</body>
+</html>
