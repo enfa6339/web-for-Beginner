@@ -36,7 +36,7 @@
 
   <!-- Header -->
   <header class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-teal-light/20">
-    <!-- โลโก้พร้อมปุ่มลับ Triple Click -->
+    <!-- ปุ่มลับ กดโลโก้รัว 3 ครั้งเพื่อเข้าหน้า Admin -->
     <div id="secretLogo" onclick="handleSecretClick()" class="font-display text-2xl font-bold text-amber cursor-pointer select-none" title="OptiGuard">
       OptiGuard
     </div>
@@ -82,7 +82,7 @@
       } else if (clickCount === 3) {
         clearTimeout(clickTimer);
         clickCount = 0;
-        window.location.href = "admin.html"; // วาร์ปไปหน้า Admin ทันที
+        window.location.href = "admin.html"; // วาร์ปไปหน้า Admin
       }
     }
 
