@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -26,173 +27,74 @@
 <style>
   * { font-family: 'Sarabun', sans-serif; }
   .font-display { font-family: 'Kanit', sans-serif; }
-  html { scroll-behavior: smooth; }
   body { background-color: #0B0F1F; }
-
-  .glow-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-  .glow-orb { position: absolute; border-radius: 9999px; filter: blur(90px); opacity: 0.55; }
-
-  .lens-frame { position: relative; }
-  .lens-frame::before {
-    content: ''; position: absolute; inset: -40px;
-    background: radial-gradient(circle at 50% 45%, rgba(232,163,61,0.35), rgba(232,163,61,0) 65%);
-    z-index: -1;
-  }
-
-  .price-strike { position: relative; display: inline-block; }
-  .price-strike::after {
-    content: ''; position: absolute; left: -4%; right: -4%; top: 52%;
-    height: 2px; background: #C0503A; transform: rotate(-4deg);
-  }
-
-  .btn-primary {
-    background: #E8A33D; color: #12172B;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-  }
+  .btn-primary { background: #E8A33D; color: #12172B; transition: all 0.15s ease; }
   .btn-primary:hover { background: #F2C579; box-shadow: 0 8px 30px -6px rgba(232,163,61,0.5); }
-  .btn-primary:active { transform: scale(0.98); }
-
-  .benefit-card {
-    border: 1px solid rgba(124,151,160,0.25);
-    background: linear-gradient(180deg, rgba(29,36,64,0.6), rgba(18,23,43,0.3));
-  }
-
-  @keyframes riseIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-  .rise-in { animation: riseIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
-
-  @media (prefers-reduced-motion: reduce) { .rise-in { animation: none; } html { scroll-behavior: auto; } }
 </style>
 </head>
-<body class="bg-navy-deep text-cream">
+<body class="bg-navy-deep text-cream min-h-screen">
 
-  <!-- ============ NAV ============ -->
-  <header class="relative z-20 max-w-6xl mx-auto px-6 md:px-10 py-6 flex items-center justify-between">
-    <!-- โลโก้แบบแอบคลิกลับ 3 ครั้งเพื่อเข้าหน้า Admin -->
-    <span id="secretAdminLogo" class="font-display text-xl md:text-2xl font-semibold tracking-tight text-cream cursor-pointer select-none">
-      OptiGuard
-    </span>
-    <nav class="flex items-center gap-3">
-      <a href="buy.html" class="text-sm md:text-base border border-teal-light/40 rounded-full px-5 py-2 text-cream/90 hover:border-amber hover:text-amber transition-colors">
-        สั่งซื้อ
-      </a>
-    </nav>
+  <!-- Header -->
+  <header class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-teal-light/20">
+    <div class="font-display text-2xl font-bold text-amber">OptiGuard</div>
+    <div class="flex gap-4 items-center text-sm">
+      <a href="buy.html" class="btn-primary px-5 py-2 rounded-full font-display font-medium">สั่งซื้อออนไลน์</a>
+      <a href="pos.html" class="text-cream/60 hover:text-amber">POS หน้าร้าน</a>
+    </div>
   </header>
 
-  <!-- ============ HERO ============ -->
-  <section class="relative overflow-hidden">
-    <div class="glow-field">
-      <div class="glow-orb w-[500px] h-[500px] bg-amber/70 -top-40 -right-20"></div>
-      <div class="glow-orb w-[380px] h-[380px] bg-teal/50 bottom-0 -left-32"></div>
-    </div>
+  <!-- Hero Banner -->
+  <section class="max-w-7xl mx-auto px-6 py-16 text-center">
+    <h1 class="font-display text-4xl md:text-6xl font-bold text-cream mb-4">
+      ปกป้องสายตาหน้าจอ <span class="text-amber">สบายตาทุกชั่วโมงทำงาน</span>
+    </h1>
+    <p class="text-cream/70 text-lg max-w-2xl mx-auto mb-8">
+      กรองแสงสีฟ้าสูงสุด 99% น้ำหนักเบา ใส่ทำงาน เรียน หรือไถมือถือได้ทั้งวันโดยไม่ปวดตา
+    </p>
+  </section>
 
-    <div class="relative z-10 max-w-6xl mx-auto px-6 md:px-10 pt-8 pb-20 md:pt-16 md:pb-28 grid md:grid-cols-2 gap-12 items-center">
-      <div class="rise-in">
-        <p class="text-teal-light font-body text-sm md:text-base mb-4 tracking-wide">แว่นตากรองแสงสีฟ้าคอมพิวเตอร์และมือถือ</p>
-        <h1 class="font-display text-4xl md:text-6xl leading-[1.1] font-semibold text-cream mb-6">
-          ปกป้องสายตาหน้าจอ<br>
-          <span class="text-amber">สบายตา</span>ทุกชั่วโมงทำงาน
-        </h1>
-        <p class="text-cream/70 text-base md:text-lg leading-relaxed mb-6 max-w-md">
-          กรองแสงสีฟ้าสูงสุด 99% เลนส์เบาเพียง 12 กรัม ใส่ทำงาน เรียน หรือไถหน้าจอได้ทั้งวันโดยไม่ปวดตา
-        </p>
-
-        <div class="flex items-end gap-3 mb-8">
-          <span class="price-strike text-cream/50 text-lg font-body">990 บาท</span>
-          <span class="font-display text-4xl md:text-5xl font-semibold text-amber">490 บาท</span>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-4">
-          <a href="buy.html" class="btn-primary font-display font-medium text-base md:text-lg px-8 py-3.5 rounded-full inline-block">
-            สั่งซื้อทันที
-          </a>
-          <span class="text-cream/60 text-sm">ส่งฟรีทั่วไทย</span>
-        </div>
-      </div>
-
-      <div class="rise-in flex justify-center" style="animation-delay: 0.15s;">
-        <div class="lens-frame w-full max-w-sm">
-          <img
-            src="https://images.unsplash.com/photo-1591076482161-42ce6da69f67?q=80&w=800&auto=format&fit=crop"
-            alt="แว่นตากรองแสงคอมพิวเตอร์ OptiGuard"
-            class="w-full h-auto rounded-2xl object-cover shadow-2xl"
-            loading="eager"
-          >
-        </div>
-      </div>
+  <!-- Product Catalog (ดึงจาก Supabase) -->
+  <section class="max-w-7xl mx-auto px-6 pb-20">
+    <h2 class="font-display text-2xl font-semibold mb-8 text-cream text-center">สินค้าทั้งหมดของเรา</h2>
+    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <p class="text-cream/50 col-span-full text-center py-8">กำลังโหลดรายการสินค้า...</p>
     </div>
   </section>
 
-  <!-- ============ BENEFITS ============ -->
-  <section class="relative z-10 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
-    <div class="max-w-xl mb-12">
-      <h2 class="font-display text-3xl md:text-4xl font-semibold text-cream mb-4">
-        ทำไมสายตาคุณถึงต้องมี OptiGuard
-      </h2>
-      <p class="text-cream/60 leading-relaxed">
-        ออกแบบมาสำหรับคนที่อยู่หน้าจอทั้งวัน ไม่ว่าจะทำงาน เรียน หรือเล่นมือถือ
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="benefit-card rounded-2xl p-7 md:p-8">
-        <svg class="w-9 h-9 text-amber mb-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-        <h3 class="font-display text-lg font-medium text-cream mb-3">กรองแสงสีฟ้า 99%</h3>
-        <p class="text-cream/60 text-sm leading-relaxed">
-          ลดแสงสีฟ้าจากหน้าจอคอมพิวเตอร์และมือถือ ช่วยลดอาการปวดตา สายตาล้าจากการจ้องหน้าจอนาน ๆ
-        </p>
-      </div>
-
-      <div class="benefit-card rounded-2xl p-7 md:p-8">
-        <svg class="w-9 h-9 text-amber mb-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>
-        </svg>
-        <h3 class="font-display text-lg font-medium text-cream mb-3">เบาเพียง 12 กรัม</h3>
-        <p class="text-cream/60 text-sm leading-relaxed">
-          น้ำหนักเบาพิเศษ ไม่กดทับสันจมูก ใส่ได้ทั้งวันโดยไม่รู้สึกหนักหรือเจ็บ
-        </p>
-      </div>
-
-      <div class="benefit-card rounded-2xl p-7 md:p-8">
-        <svg class="w-9 h-9 text-amber mb-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M12 3c-4 0-7 2.5-7 6 0 2 1 3.5 2 4.5-.5 1.5-1 2.5-2 3.5 2 0 3.5-.5 5-1.5 .6.1 1.3.2 2 .2 4 0 7-2.5 7-6.7S16 3 12 3Z"/>
-        </svg>
-        <h3 class="font-display text-lg font-medium text-cream mb-3">กรอบยืดหยุ่น ดีไซน์มินิมอล</h3>
-        <p class="text-cream/60 text-sm leading-relaxed">
-          กรอบแว่นทนทาน งอได้ไม่หัก ดีไซน์เรียบง่ายที่เข้ากับทุกชุด ใส่ได้ทุกโอกาส
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ FOOTER ============ -->
-  <footer class="relative z-10 border-t border-teal-light/15">
-    <div class="max-w-6xl mx-auto px-6 md:px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <span class="font-display text-cream/80">OptiGuard</span>
-      <span class="text-cream/40 text-sm">© 2026 OptiGuard. สงวนลิขสิทธิ์ทุกประการ</span>
-    </div>
-  </footer>
-
-  <!-- ============ SECRET ADMIN SCRIPT ============ -->
   <script>
-    let clickCount = 0;
-    let clickTimer;
+    const SUPABASE_URL = "https://whhzpuqpsexnauxxxwjv.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_RgHmJpBmzx8OD6B5f2VQoA_5TiM9QcZ";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    document.getElementById('secretAdminLogo').addEventListener('click', () => {
-      clickCount++;
-      clearTimeout(clickTimer);
+    async function loadProducts() {
+      const { data, error } = await supabaseClient.from('products').select('*');
+      if (error) { console.error(error); return; }
+      renderProducts(data || []);
+    }
 
-      if (clickCount >= 3) {
-        window.location.href = 'admin.html';
-        clickCount = 0;
-      } else {
-        // หากไม่กดต่อภายใน 1 วินาที ให้รีเซ็ตนับใหม่
-        clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+    function renderProducts(products) {
+      const grid = document.getElementById('productGrid');
+      if (products.length === 0) {
+        grid.innerHTML = '<p class="text-cream/50 col-span-full text-center py-8">ไม่มีสินค้าจำหน่ายในขณะนี้</p>';
+        return;
       }
-    });
-  </script>
 
+      grid.innerHTML = products.map(p => `
+        <div class="bg-navy-light/40 border border-teal-light/20 rounded-2xl p-5 flex flex-col justify-between hover:border-amber/50 transition-all">
+          <div>
+            <img src="${p.image_url || 'https://via.placeholder.com/300'}" class="w-full h-48 object-cover rounded-xl mb-4">
+            <h3 class="font-display text-lg font-semibold text-cream mb-1">${p.name}</h3>
+            <p class="text-amber font-semibold text-xl mb-2">${p.price} บาท</p>
+            <p class="text-cream/40 text-xs mb-4">สถานะ: ${p.stock > 0 ? `มีสินค้าคงเหลือ ${p.stock} ชิ้น` : '<span class="text-red-400">สินค้าหมด</span>'}</p>
+          </div>
+          <a href="buy.html" class="btn-primary w-full py-2.5 rounded-xl font-display text-center font-medium block">
+            สั่งซื้อเลย
+          </a>
+        </div>
+      `).join('');
+    }
+
+    loadProducts();
+  </script>
 </body>
 </html>
