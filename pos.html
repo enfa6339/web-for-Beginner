@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POS System — OptiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { DEFAULT: '#12172B', deep: '#0B0F1F', light: '#1D2440' },
+          amber: { DEFAULT: '#E8A33D', soft: '#F2C579', dim: '#9C7233' },
+          teal: { DEFAULT: '#4C6B77', light: '#7C97A0' },
+          cream: '#F5F0E6',
+        },
+        fontFamily: { display: ['Kanit', 'sans-serif'], body: ['Sarabun', 'sans-serif'] },
+      },
+    },
+  }
+</script>
+<style>
+  * { font-family: 'Sarabun', sans-serif; }
+  .font-display { font-family: 'Kanit', sans-serif; }
+  body { background-color: #0B0F1F; }
+  .btn-primary { background: #E8A33D; color: #12172B; transition: all 0.15s ease; }
+  .btn-primary:hover { background: #F2C579; box-shadow: 0 8px 30px -6px rgba(232,163,61,0.5); }
+</style>
+</head>
+<body class="bg-navy-deep text-cream min-h-screen">
+
+  <header class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-teal-light/20 mb-6">
+    <div class="flex items-center gap-3">
+      <span class="font-display text-2xl font-semibold text-cream">OptiGuard POS</span>
+      <span class="text-cream/40 text-sm">/ ระบบขายหน้าร้าน</span>
+    </div>
+    <a href="admin.html" class="text-sm text-cream/60 hover:text-amber">← หน้า Admin</a>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <section class="lg:col-span-2">
+      <h2 class="font-display text-xl font-semibold mb-4 text-amber">รายการสินค้า</h2>
+      <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <p class="text-cream/50">กำลังโหลดสินค้า...</p>
+      </div>
+    </section>
+
+    <section class="bg-navy-light/40 border border-teal-light/20 rounded-2xl p-6 h-fit">
+      <h2 class="font-display text-xl font-semibold mb-4 text-cream">ตะกร้าสินค้า</h2>
+      <div id="cartItems" class="space-y-3 mb-6 min-h-[150px] divide-y divide-teal-light/10">
+        <p class="text-cream/40 text-center py-8">ยังไม่มีสินค้าในตะกร้า</p>
+      </div>
+
+      <div class="border-t border-teal-light/20 pt-4 mb-6">
+        <div class="flex justify-between items-center text-lg font-display">
+          <span>ราคารวมทั้งหมด:</span>
+          <span id="totalPrice" class="text-amber font-semibold text-2xl">0 บาท</span>
+        </div>
+      </div>
+
+      <button id="checkoutBtn" onclick="processCheckout()" disabled
+        class="btn-primary w-full py-3.5 rounded-full font-display font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed">
+        ยืนยันการขาย
+      </button>
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://whhzpuqpsexnauxxxwjv.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_RgHmJpBmzx8OD6B5f2VQoA_5TiM9QcZ";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let products = [];
+    let cart = [];
+
+    async function loadProducts() {
+      const { data, error } = await supabaseClient.from('products').select('*');
+      if (error) { console.error(error); return; }
+      products = data || [];
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      if (products.length === 0) {
+        grid.innerHTML = '<p class="text-cream/50">ไม่มีสินค้าในระบบ</p>';
+        return;
+      }
+      grid.innerHTML = products.map(p => `
+        <div class="bg-navy-light/60 border border-teal-light/20 rounded-xl p-4 flex gap-4 items-center">
+          <img src="${p.image_url || 'https://via.placeholder.com/100'}" class="w-20 h-20 object-cover rounded-lg">
+          <div class="flex-1">
+            <h3 class="font-display font-medium text-cream">${p.name}</h3>
+            <p class="text-amber font-semibold">${p.price} บาท</p>
+            <p class="text-cream/40 text-xs mt-1">คงเหลือ: ${p.stock} ชิ้น</p>
+            <button onclick="addToCart(${p.id})" ${p.stock <= 0 ? 'disabled' : ''} 
+              class="mt-2 btn-primary text-xs px-3 py-1.5 rounded-full font-display disabled:opacity-40">
+              ${p.stock > 0 ? '+ เพิ่มในตะกร้า' : 'สินค้าหมด'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      const cartItem = cart.find(item => item.id === productId);
+
+      if (cartItem) {
+        if (cartItem.qty < product.stock) cartItem.qty++;
+        else alert('สินค้าในสต๊อกไม่พอ');
+      } else {
+        cart.push({ ...product, qty: 1 });
+      }
+      renderCart();
+    }
+
+    function renderCart() {
+      const cartContainer = document.getElementById('cartItems');
+      const totalEl = document.getElementById('totalPrice');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+
+      if (cart.length === 0) {
+        cartContainer.innerHTML = '<p class="text-cream/40 text-center py-8">ยังไม่มีสินค้าในตะกร้า</p>';
+        totalEl.textContent = '0 บาท';
+        checkoutBtn.disabled = true;
+        return;
+      }
+
+      let total = 0;
+      cartContainer.innerHTML = cart.map(item => {
+        const itemTotal = item.price * item.qty;
+        total += itemTotal;
+        return `
+          <div class="pt-3 flex justify-between items-center text-sm">
+            <div>
+              <p class="text-cream font-medium">${item.name}</p>
+              <p class="text-cream/50 text-xs">${item.price} x ${item.qty}</p>
+            </div>
+            <span class="text-amber font-medium">${itemTotal} ฿</span>
+          </div>
+        `;
+      }).join('');
+
+      totalEl.textContent = `${total} บาท`;
+      checkoutBtn.disabled = false;
+    }
+
+    async function processCheckout() {
+      const checkoutBtn = document.getElementById('checkoutBtn');
+      checkoutBtn.disabled = true;
+      checkoutBtn.textContent = 'กำลังบันทึก...';
+
+      for (const item of cart) {
+        const { error: saleError } = await supabaseClient
+          .from('sales')
+          .insert([{ product_id: item.id, quantity: item.qty, total_price: item.price * item.qty }]);
+
+        if (saleError) {
+          alert('เกิดข้อผิดพลาดในการบันทึกการขาย');
+          console.error(saleError);
+          checkoutBtn.disabled = false;
+          checkoutBtn.textContent = 'ยืนยันการขาย';
+          return;
+        }
+
+        const newStock = item.stock - item.qty;
+        await supabaseClient
+          .from('products')
+          .update({ stock: newStock })
+          .eq('id', item.id);
+      }
+
+      alert('บันทึกการขายสำเร็จ!');
+      cart = [];
+      renderCart();
+      loadProducts();
+      checkoutBtn.textContent = 'ยืนยันการขาย';
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
