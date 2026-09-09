@@ -36,7 +36,10 @@
 
   <!-- Header -->
   <header class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-teal-light/20">
-    <div class="font-display text-2xl font-bold text-amber">OptiGuard</div>
+    <!-- โลโก้พร้อมปุ่มลับ Triple Click -->
+    <div id="secretLogo" onclick="handleSecretClick()" class="font-display text-2xl font-bold text-amber cursor-pointer select-none" title="OptiGuard">
+      OptiGuard
+    </div>
     <div class="flex gap-4 items-center text-sm">
       <a href="buy.html" class="btn-primary px-5 py-2 rounded-full font-display font-medium">สั่งซื้อออนไลน์</a>
       <a href="pos.html" class="text-cream/60 hover:text-amber">POS หน้าร้าน</a>
@@ -65,6 +68,23 @@
     const SUPABASE_URL = "https://whhzpuqpsexnauxxxwjv.supabase.co";
     const SUPABASE_KEY = "sb_publishable_RgHmJpBmzx8OD6B5f2VQoA_5TiM9QcZ";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ระบบปุ่มลับกด 3 ครั้งเข้าหน้า Admin
+    let clickCount = 0;
+    let clickTimer = null;
+
+    function handleSecretClick() {
+      clickCount++;
+      if (clickCount === 1) {
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+        }, 800); // ต้องกดให้ครบ 3 ครั้งภายใน 0.8 วินาที
+      } else if (clickCount === 3) {
+        clearTimeout(clickTimer);
+        clickCount = 0;
+        window.location.href = "admin.html"; // วาร์ปไปหน้า Admin ทันที
+      }
+    }
 
     async function loadProducts() {
       const { data, error } = await supabaseClient.from('products').select('*');
