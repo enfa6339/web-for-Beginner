@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OptiGuard — ปกป้องสายตาหน้าจอ สบายตาทุกชั่วโมงทำงาน</title>
+<title>Admin Dashboard — OptiGuard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -29,92 +29,133 @@
   .font-display { font-family: 'Kanit', sans-serif; }
   body { background-color: #0B0F1F; }
   .btn-primary { background: #E8A33D; color: #12172B; transition: all 0.15s ease; }
-  .btn-primary:hover { background: #F2C579; box-shadow: 0 8px 30px -6px rgba(232,163,61,0.5); }
+  .btn-primary:hover { background: #F2C579; }
 </style>
 </head>
-<body class="bg-navy-deep text-cream min-h-screen">
+<body class="bg-navy-deep text-cream min-h-screen pb-12">
 
-  <!-- Header -->
-  <header class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-teal-light/20">
-    <!-- โลโก้พร้อมปุ่มลับ Triple Click -->
-    <div id="secretLogo" onclick="handleSecretClick()" class="font-display text-2xl font-bold text-amber cursor-pointer select-none" title="OptiGuard">
-      OptiGuard
+  <header class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-teal-light/20 mb-8">
+    <div class="flex items-center gap-3">
+      <span class="font-display text-2xl font-bold text-amber">OptiGuard</span>
+      <span class="text-xs bg-amber/20 text-amber px-2.5 py-1 rounded-full border border-amber/30">Admin Dashboard</span>
     </div>
-    <div class="flex gap-4 items-center text-sm">
-      <a href="buy.html" class="btn-primary px-5 py-2 rounded-full font-display font-medium">สั่งซื้อออนไลน์</a>
-      <a href="pos.html" class="text-cream/60 hover:text-amber">POS หน้าร้าน</a>
-    </div>
+    <a href="index.html" class="text-sm text-cream/60 hover:text-amber">← กลับหน้าสินค้า</a>
   </header>
 
-  <!-- Hero Banner -->
-  <section class="max-w-7xl mx-auto px-6 py-16 text-center">
-    <h1 class="font-display text-4xl md:text-6xl font-bold text-cream mb-4">
-      ปกป้องสายตาหน้าจอ <span class="text-amber">สบายตาทุกชั่วโมงทำงาน</span>
-    </h1>
-    <p class="text-cream/70 text-lg max-w-2xl mx-auto mb-8">
-      กรองแสงสีฟ้าสูงสุด 99% น้ำหนักเบา ใส่ทำงาน เรียน หรือไถมือถือได้ทั้งวันโดยไม่ปวดตา
-    </p>
-  </section>
-
-  <!-- Product Catalog (ดึงจาก Supabase) -->
-  <section class="max-w-7xl mx-auto px-6 pb-20">
-    <h2 class="font-display text-2xl font-semibold mb-8 text-cream text-center">สินค้าทั้งหมดของเรา</h2>
-    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <p class="text-cream/50 col-span-full text-center py-8">กำลังโหลดรายการสินค้า...</p>
+  <main class="max-w-7xl mx-auto px-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="font-display text-2xl font-semibold text-cream">รายการสั่งซื้อสินค้าทั้งหมด</h1>
+      <button onclick="loadOrders()" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">
+        ↻ รีเฟรชข้อมูล
+      </button>
     </div>
-  </section>
+
+    <!-- ตารางแสดงผล -->
+    <div class="bg-navy-light/40 border border-teal-light/20 rounded-2xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-navy-light text-amber font-display border-b border-teal-light/20">
+            <tr>
+              <th class="p-4">วัน-เวลา</th>
+              <th class="p-4">สินค้า</th>
+              <th class="p-4 text-center">จำนวน</th>
+              <th class="p-4 text-right">ยอดรวม</th>
+              <th class="p-4">ชื่อลูกค้า</th>
+              <th class="p-4">เบอร์โทร</th>
+              <th class="p-4">ที่อยู่จัดส่ง</th>
+              <th class="p-4 text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="orderTableBody" class="divide-y divide-teal-light/10 text-cream/80">
+            <tr>
+              <td colspan="8" class="p-8 text-center text-cream/40">กำลังโหลดรายการสั่งซื้อ...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
 
   <script>
     const SUPABASE_URL = "https://whhzpuqpsexnauxxxwjv.supabase.co";
     const SUPABASE_KEY = "sb_publishable_RgHmJpBmzx8OD6B5f2VQoA_5TiM9QcZ";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxzubfCkVhK7-pnK2bwUpJU_lxd0zfemP2i1KsGM9AWiUmlsNAEXdkTJkE2lq2FA4I9-A/exec"; 
 
-    // ระบบปุ่มลับกด 3 ครั้งเข้าหน้า Admin
-    let clickCount = 0;
-    let clickTimer = null;
+    async function loadOrders() {
+      // ดึงข้อมูลแยกตารางเพื่อแก้ปัญหา Error Relation
+      const { data: sales, error: salesError } = await supabaseClient.from('sales').select('*');
+      const { data: products } = await supabaseClient.from('products').select('*');
 
-    function handleSecretClick() {
-      clickCount++;
-      if (clickCount === 1) {
-        clickTimer = setTimeout(() => {
-          clickCount = 0;
-        }, 800); // ต้องกดให้ครบ 3 ครั้งภายใน 0.8 วินาที
-      } else if (clickCount === 3) {
-        clearTimeout(clickTimer);
-        clickCount = 0;
-        window.location.href = "admin.html"; // วาร์ปไปหน้า Admin ทันที
-      }
-    }
-
-    async function loadProducts() {
-      const { data, error } = await supabaseClient.from('products').select('*');
-      if (error) { console.error(error); return; }
-      renderProducts(data || []);
-    }
-
-    function renderProducts(products) {
-      const grid = document.getElementById('productGrid');
-      if (products.length === 0) {
-        grid.innerHTML = '<p class="text-cream/50 col-span-full text-center py-8">ไม่มีสินค้าจำหน่ายในขณะนี้</p>';
+      if (salesError) {
+        console.error(salesError);
+        document.getElementById('orderTableBody').innerHTML = `<tr><td colspan="8" class="p-8 text-center text-red-400">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
         return;
       }
 
-      grid.innerHTML = products.map(p => `
-        <div class="bg-navy-light/40 border border-teal-light/20 rounded-2xl p-5 flex flex-col justify-between hover:border-amber/50 transition-all">
-          <div>
-            <img src="${p.image_url || 'https://via.placeholder.com/300'}" class="w-full h-48 object-cover rounded-xl mb-4">
-            <h3 class="font-display text-lg font-semibold text-cream mb-1">${p.name}</h3>
-            <p class="text-amber font-semibold text-xl mb-2">${p.price} บาท</p>
-            <p class="text-cream/40 text-xs mb-4">สถานะ: ${p.stock > 0 ? `มีสินค้าคงเหลือ ${p.stock} ชิ้น` : '<span class="text-red-400">สินค้าหมด</span>'}</p>
-          </div>
-          <a href="buy.html" class="btn-primary w-full py-2.5 rounded-xl font-display text-center font-medium block">
-            สั่งซื้อเลย
-          </a>
-        </div>
-      `).join('');
+      const productMap = {};
+      if (products) {
+        products.forEach(p => productMap[p.id] = p.name);
+      }
+
+      const sortedSales = (sales || []).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      renderTable(sortedSales, productMap);
     }
 
-    loadProducts();
+    function renderTable(sales, productMap) {
+      const tbody = document.getElementById('orderTableBody');
+      if (sales.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-cream/40">ยังไม่มีรายการสั่งซื้อ</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = sales.map(s => {
+        const date = s.created_at ? new Date(s.created_at).toLocaleString('th-TH') : '-';
+        const pName = productMap[s.product_id] || 'สินค้าทั่วไป';
+        const address = s.customer_address || '-';
+        return `
+          <tr class="hover:bg-navy-light/20">
+            <td class="p-4 text-xs text-cream/50">${date}</td>
+            <td class="p-4 font-medium text-cream">${pName}</td>
+            <td class="p-4 text-center">${s.quantity || 1}</td>
+            <td class="p-4 text-right text-amber font-semibold">${s.total_price || 0} ฿</td>
+            <td class="p-4">${s.customer_name || '<span class="text-cream/30">หน้าร้าน (POS)</span>'}</td>
+            <td class="p-4">${s.customer_phone || '-'}</td>
+            <td class="p-4 text-xs max-w-xs truncate">${address}</td>
+            <td class="p-4 text-center">
+              <button onclick='syncToSheet(${JSON.stringify({
+                product_name: pName,
+                quantity: s.quantity || 1,
+                total_price: s.total_price || 0,
+                customer_name: s.customer_name || "หน้าร้าน (POS)",
+                customer_phone: s.customer_phone || "-",
+                customer_address: address
+              })})' class="text-xs bg-teal/40 hover:bg-teal text-cream px-3 py-1.5 rounded-md border border-teal-light/30">
+                ส่งเข้า Sheet
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function syncToSheet(order) {
+      try {
+        await fetch(GOOGLE_SHEET_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(order)
+        });
+        alert("ส่งข้อมูลเข้า Google Sheet เรียบร้อยแล้ว!");
+      } catch (err) {
+        alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+        console.error(err);
+      }
+    }
+
+    loadOrders();
   </script>
 </body>
 </html>
