@@ -75,6 +75,26 @@
     const SUPABASE_KEY = "sb_publishable_RgHmJpBmzx8OD6B5f2VQoA_5TiM9QcZ";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ตั้งค่า Telegram Bot
+    const TELEGRAM_BOT_TOKEN = "8949390988:AAG3ynODKcbPhktN1KE1hXmL4wBymQG3fO0";
+    const TELEGRAM_CHAT_ID = "8486996324";
+
+    async function sendTelegramNotification(message) {
+      try {
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: "HTML"
+          })
+        });
+      } catch (err) {
+        console.error("Telegram notification error:", err);
+      }
+    }
+
     let products = [];
     let cart = [];
 
@@ -156,10 +176,16 @@
       checkoutBtn.disabled = true;
       checkoutBtn.textContent = 'กำลังบันทึก...';
 
+      let messageText = "🛍️ <b>ขายหน้าร้านสำเร็จ! (POS)</b>\n";
+      let grandTotal = 0;
+
       for (const item of cart) {
+        const itemTotal = item.price * item.qty;
+        grandTotal += itemTotal;
+
         const { error: saleError } = await supabaseClient
           .from('sales')
-          .insert([{ product_id: item.id, quantity: item.qty, total_price: item.price * item.qty }]);
+          .insert([{ product_id: item.id, quantity: item.qty, total_price: itemTotal }]);
 
         if (saleError) {
           alert('เกิดข้อผิดพลาดในการบันทึกการขาย');
@@ -174,7 +200,14 @@
           .from('products')
           .update({ stock: newStock })
           .eq('id', item.id);
+
+        messageText += `• ${item.name} x ${item.qty} = ${itemTotal} ฿\n`;
       }
+
+      messageText += `💰 <b>ยอดรวมทั้งสิ้น: ${grandTotal} บาท</b>`;
+
+      // ส่งข้อความเข้า Telegram
+      await sendTelegramNotification(messageText);
 
       alert('บันทึกการขายสำเร็จ!');
       cart = [];
