@@ -91,6 +91,26 @@
     const SUPABASE_KEY = "sb_publishable_RgHmJpBmzx8OD6B5f2VQoA_5TiM9QcZ";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ตั้งค่า Telegram Bot
+    const TELEGRAM_BOT_TOKEN = "8949390988:AAG3ynODKcbPhktN1KE1hXmL4wBymQG3fO0";
+    const TELEGRAM_CHAT_ID = "8486996324";
+
+    async function sendTelegramNotification(message) {
+      try {
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: "HTML"
+          })
+        });
+      } catch (err) {
+        console.error("Telegram notification error:", err);
+      }
+    }
+
     let products = [];
 
     async function loadProducts() {
@@ -159,6 +179,17 @@
       } else {
         // ตัดสต๊อกสินค้า
         await supabaseClient.from('products').update({ stock: product.stock - qty }).eq('id', productId);
+        
+        // ส่งแจ้งเตือนเข้า Telegram
+        let msg = `🛒 <b>รายการสั่งซื้อออนไลน์ใหม่!</b>\n`;
+        msg += `📦 สินค้า: ${product.name} (${qty} ชิ้น)\n`;
+        msg += `💰 ยอดรวม: ${product.price * qty} บาท\n`;
+        msg += `👤 ลูกค้า: ${orderData.customer_name}\n`;
+        msg += `📞 โทร: ${orderData.customer_phone}\n`;
+        msg += `📍 ที่อยู่: ${orderData.customer_address}`;
+        
+        await sendTelegramNotification(msg);
+
         alert('สั่งซื้อสำเร็จ! เจ้าหน้าที่จะติดต่อกลับโดยเร็ว');
         document.getElementById('orderForm').reset();
         loadProducts();
